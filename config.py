@@ -1,0 +1,2 @@
+TOKEN = "1755603336:AAGEHorxjv_WOzRrJYGPvGuvPSxeZ26jBBI"
+DB_NAME = "users.sqlite3"
