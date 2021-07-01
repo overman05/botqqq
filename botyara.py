@@ -13,22 +13,16 @@ bot = telebot.TeleBot(config.TOKEN)
 server_adress = config.SERVER_ADDRESS
 login = "admin"
 password = "123456"
-db = db.DB()
+
+
+def check_user(message):
+    if not db.is_user_exist(message.from_user.id):
+        db.create_user(message.from_user.id)
 
 
 @bot.message_handler(commands=["start"])
 def start(message):
-    user_id = message.from_user.id
-    logger.debug("start")
-    db.create_user(user_id)
-
-
-@bot.message_handler(commands=["test"])
-def get_lock(msg):
-    locker = lockServer.LockerAPI(server_adress)
-    locker.login(login, password)
-    rv = locker.device_location()
-    bot.reply_to(msg, rv)
+    db.create_user(message.from_user.id)
 
 
 ####################################################################
@@ -36,6 +30,8 @@ def get_lock(msg):
 
 @bot.message_handler(commands=["occupy"])
 def check_location(message):
+    check_user(message)
+
     keyboard = types.ReplyKeyboardMarkup(
         row_width=1, resize_keyboard=True, one_time_keyboard=True
     )
@@ -52,8 +48,7 @@ def check_location(message):
 
 
 def find_device(message):
-    locker = lockServer.LockerAPI(server_adress)
-    locker.login(login, password)
+    locker = lockServer.LockerAPI(server_adress, login, password)
     rv = locker.device_location()
 
     device = rv[0]
@@ -88,9 +83,14 @@ def find_device(message):
 
 @bot.message_handler(commands=["free"])
 def free_cell(message):
-    cells = db.get_user_cell(message.from_user.id)
-    markup = types.ReplyKeyboardMarkup()
+    check_user(message)
 
+    cells = db.get_user_cell(message.from_user.id)
+    if len(cells) == 0:
+        bot.send_message(message.chat.id, "Похоже у вас нет забронированных ячеек")
+        return
+
+    markup = types.ReplyKeyboardMarkup()
     for cell in cells:
         markup.add(types.KeyboardButton(text=cell[1]))
     bot.send_message(
@@ -98,16 +98,16 @@ def free_cell(message):
         "Введите номер своей ячейки",
         reply_markup=markup,
     )
+
     bot.register_next_step_handler(message, free_cell_final)
 
 
 def free_cell_final(message):
-    locker = lockServer.LockerAPI(server_adress)
-    locker.login(login, password)
-    locker.free_cell(message.text)
+    locker = lockServer.LockerAPI(server_adress, login, password)
+    rv = locker.free_cell(message.text)
     bot.send_message(
         message.chat.id,
-        "Ячейка освобождена",
+        f"Ячейка освобождена",
         reply_markup=types.ReplyKeyboardRemove(),
     )
     db.delete_cell_from_user(user_id=message.from_user.id, cell_id=message.text)

@@ -10,8 +10,9 @@ class LockerAPI:
     server: str
     cookie: dict
 
-    def __init__(self, server):
+    def __init__(self, server, login, password):
         self.server = server
+        self._login(login, password)
 
     def get_version(self):
         rv = requests.get(self.server + "/api/GetVersion")
@@ -19,7 +20,7 @@ class LockerAPI:
         assert rv.status_code == 200, f"Returned {rv.json()}"
         return rv.json()["version"]
 
-    def login(self, login, password):
+    def _login(self, login, password):
         rv = requests.post(
             self.server + "/api/Login", json={"login": login, "password": password}
         )
@@ -68,14 +69,12 @@ class LockerAPI:
         return rv.json()
 
     def free_cell(self, cell_id):
-        requests.post(
+        rv = requests.post(
             self.server + "/api/FreeCell",
             cookies=self.cookie,
             json={"cell_id": cell_id},
         )
+        return rv.json()
 
     def logout(self):
         requests.post(self.server + "/api/Logout")
-
-
-# botqqq v nashih serdcah
