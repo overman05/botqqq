@@ -32,8 +32,12 @@ class LockerAPI:
         else:
             raise LoginError("Не удалось подключиться к серверам вальв")
 
-    def get_cells(self):
-        rv = requests.post(self.server + "/api/GetCells", cookies=self.cookie)
+    def get_cells(self, device_id=None):
+        rv = requests.post(
+            self.server + "/api/GetCells",
+            cookies=self.cookie,
+            json={"device_id": device_id} if device_id is not None else None,
+        )
         assert rv.status_code == 200, f"GetCells failed: {rv.json()}"
 
         return rv.json()
@@ -46,7 +50,7 @@ class LockerAPI:
 
     def device_location(self):
         rv = requests.post(
-            self.server + "/api/GetDeviceLocation",
+            self.server + "/api/GetDeviceLocations",
             cookies=self.cookie
             # json={"device_id": "1"},
         )
@@ -54,20 +58,20 @@ class LockerAPI:
 
         return rv.json()
 
-    def occupy_cell(self):
+    def occupy_cell(self, device_id):
         rv = requests.post(
             self.server + "/api/OccupyCell",
             cookies=self.cookie,
-            json={"device_id": "1"},
+            json={"device_id": device_id},
         )
         assert rv.status_code == 200, f"OccupyCell failded: {rv.json()}"
         return rv.json()
 
-    def free_cell(self, user_key):
-        rv = requests.post(
+    def free_cell(self, cell_id):
+        requests.post(
             self.server + "/api/FreeCell",
             cookies=self.cookie,
-            json={"user_key": user_key},
+            json={"cell_id": cell_id},
         )
 
     def logout(self):
