@@ -69,7 +69,7 @@ class LockerAPI:
         assert rv.status_code == 200, f"OccupyCell failded: {rv.json()}"
         return rv.json()
 
-    def free_cell(self, cell_id) -> Dict():
+    def free_cell(self, cell_id):
         rv = requests.post(
             self.server + "/api/FreeCell",
             cookies=self.cookie,
