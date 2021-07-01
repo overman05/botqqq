@@ -119,9 +119,14 @@ def free_cell(message):
 def free_cell_final(message):
     locker = lockServer.LockerAPI(server_adress, login, password)
     rv = locker.free_cell(message.text)
+
+    msg = "Ячейка освобождена"
+    if rv.get("error", None) is not None:
+        msg = f"Произошла ошибка {rv['error']}"
+
     bot.send_message(
         message.chat.id,
-        f"Ячейка освобождена",
+        msg,
         reply_markup=types.ReplyKeyboardRemove(),
     )
     db.delete_cell_from_user(user_id=message.from_user.id, cell_id=message.text)
