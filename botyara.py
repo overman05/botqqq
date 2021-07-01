@@ -15,14 +15,26 @@ login = "admin"
 password = "123456"
 
 
+commands = {
+    "occupy": "Занять ячейку в ближайшем свободном аппарате",
+    "free": "Освободить занятую ячейку",
+}
+
+
 def check_user(message):
     if not db.is_user_exist(message.from_user.id):
         db.create_user(message.from_user.id)
 
 
-@bot.message_handler(commands=["start"])
-def start(message):
-    db.create_user(message.from_user.id)
+@bot.message_handler(commands=["start", "help"])
+def start(m):
+    check_user(m)
+    cid = m.chat.id
+    help_text = "Доступные комманды: \n"
+    for key in commands:
+        help_text += "/" + key + ": "
+        help_text += commands[key] + "\n"
+    bot.send_message(cid, help_text)
 
 
 ####################################################################
@@ -90,7 +102,9 @@ def free_cell(message):
         bot.send_message(message.chat.id, "Похоже у вас нет забронированных ячеек")
         return
 
-    markup = types.ReplyKeyboardMarkup()
+    markup = types.ReplyKeyboardMarkup(
+        row_width=2, one_time_keyboard=True, resize_keyboard=True
+    )
     for cell in cells:
         markup.add(types.KeyboardButton(text=cell[1]))
     bot.send_message(
