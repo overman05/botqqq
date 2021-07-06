@@ -40,6 +40,16 @@ def add_cell_to_user(user_id, cell_id):
         )
         conn.commit()
 
+def add_number_to_user(user_id, nubme):
+    with sqlite3.connect(config.DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT if FROM user WHERE tele_id=?", (user_id))
+        uid = cursor.fetchone()[0]
+        cursor.execute(
+            "INSERT INTO phone(user_id, nubme) VALUES(?,?)", (uid, nubme))
+        )
+        conn.commit()
+
 
 def delete_cell_from_user(user_id, cell_id):
     with sqlite3.connect(config.DB_NAME) as conn:
