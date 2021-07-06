@@ -3,12 +3,23 @@ import config
 import os
 
 
+def create_db():
+    os.system(f"cat {config.SQL_SCRIPT} | sqlite3 {config.DB_NAME}")
+
+
 def init_db():
     if os.path.exists(config.DB_NAME):
-        print("Database already exist")
-
+        try:
+            conn = sqlite3.connect(config.DB_NAME)
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM user")
+        except sqlite3.OperationalError:
+            create_db()
+        else:
+            print("Database already exists")
     else:
-        os.system(f"cat {config.SQL_SCRIPT} | sqlite3 {config.DB_NAME}")
+        create_db()
+        print("Database created")
 
 
 def is_user_exist(user_id):
