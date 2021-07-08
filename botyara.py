@@ -27,7 +27,19 @@ def check_user(message):
 
 
 @bot.message_handler(commands=["start", "help"])
-def start(m):
+def start(m, message):
+    number = types.ReplyKeyboardMarkup(
+        row_width=1, resize_keyboard=True, one_time_keyboard=True
+    )
+    button_numb = types.KeyboardButton(
+        text="Отправить свой номер", request_contact=True
+    )
+    number.add(button_numb)
+    bot.send_message(
+        message.chat.id,
+        "Чтобы забронировать ячейку, нам необходим ваш номер. Нажмите на кнопку, если согласны на передачу номера",
+        reply_markup=number,
+    )
     check_user(m)
     cid = m.chat.id
     help_text = "Доступные комманды: \n"
@@ -41,22 +53,6 @@ def start(m):
 
 
 @bot.message_handler(commands=["occupy"])
-def check_nubmer(message):
-    number = types.ReplyKeyboardMarkup(
-        row_width=1, resize_keyboard=True, one_time_keyboard=True
-    )
-    button_numb = types.KeyboardButton(
-        text="Отправить свой номер", request_contact=True
-    )
-    number.add(button_numb)
-    bot.send_message(
-        message.chat.id,
-        "Чтобы забронировать ячейку, нам необходим ваш номер. Нажмите на кнопку, если согласны на передачу номера",
-        reply_markup=number,
-    )
-    bot.register_next_step_handler(message, check_location)
-
-
 def check_location(message):
     check_user(message)
 
