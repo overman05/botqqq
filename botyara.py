@@ -16,6 +16,7 @@ password = config.PASSWORD
 
 
 commands = {
+    "help": "Показать данную справку",
     "occupy": "Занять ячейку в ближайшем свободном аппарате",
     "free": "Освободить занятую ячейку",
 }
@@ -26,8 +27,17 @@ def check_user(message):
         db.create_user(message.from_user.id)
 
 
+@bot.message_handler(commands=["help"])
+def help(m):
+    cid = m.chat.id
+    help_text = "Доступные комманды: \n"
+    for key in commands:
+        help_text += "/" + key + ": "
+        help_text += commands[key] + "\n"
+    bot.send_message(cid, help_text)
+    
 ###########################################################################
-@bot.message_handler(commands=["start", "help"])
+@bot.message_handler(commands=["start"])
 def start(m):
     check_user(m)
 
@@ -44,12 +54,6 @@ def start(m):
         reply_markup=number,
     )
 
-    cid = m.chat.id
-    help_text = "Доступные комманды: \n"
-    for key in commands:
-        help_text += "/" + key + ": "
-        help_text += commands[key] + "\n"
-    bot.send_message(cid, help_text)
     bot.register_next_step_handler(m, save_number)
 
 
@@ -57,7 +61,7 @@ def save_number(message):
     db.add_number_to_user(str(message.from_user.id), message.contact.phone_number)
     bot.send_message(
         message.chat.id,
-        "Ваш номер успешно сохранен",
+        "Ваш номер успешно сохранен, чтобы получить информацию о боте введите /help",
         reply_markup=types.ReplyKeyboardRemove(),
     )
 
@@ -87,7 +91,9 @@ def check_location(message):
 def find_device(message):
     locker = lockServer.LockerAPI(server_adress, login, password)
     rv = locker.device_location()
-
+    
+    # Понять что происходит ниже способны только сильные духом
+    # поэтому просто не трогайте здесь ничего
     device = rv[0]
     u_long = message.location.longitude
     u_lat = message.location.latitude
