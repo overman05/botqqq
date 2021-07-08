@@ -11,8 +11,8 @@ telebot.logger.setLevel(logging.DEBUG)
 
 bot = telebot.TeleBot(config.TOKEN)
 server_adress = config.SERVER_ADDRESS
-login = "admin"
-password = "123456"
+login = config.LOGIN
+password = config.PASSWORD
 
 
 commands = {
@@ -26,8 +26,11 @@ def check_user(message):
         db.create_user(message.from_user.id)
 
 
+###########################################################################
 @bot.message_handler(commands=["start", "help"])
-def start(m, message):
+def start(m):
+    check_user(m)
+
     number = types.ReplyKeyboardMarkup(
         row_width=1, resize_keyboard=True, one_time_keyboard=True
     )
@@ -36,17 +39,27 @@ def start(m, message):
     )
     number.add(button_numb)
     bot.send_message(
-        message.chat.id,
+        m.chat.id,
         "Чтобы забронировать ячейку, нам необходим ваш номер. Нажмите на кнопку, если согласны на передачу номера",
         reply_markup=number,
     )
-    check_user(m)
+
     cid = m.chat.id
     help_text = "Доступные комманды: \n"
     for key in commands:
         help_text += "/" + key + ": "
         help_text += commands[key] + "\n"
     bot.send_message(cid, help_text)
+    bot.register_next_step_handler(m, save_number)
+
+
+def save_number(message):
+    db.add_number_to_user(str(message.from_user.id), message.contact.phone_number)
+    bot.send_message(
+        message.chat.id,
+        "Ваш номер успешно сохранен",
+        reply_markup=types.ReplyKeyboardRemove(),
+    )
 
 
 ####################################################################
