@@ -59,12 +59,19 @@ def start(m):
 
 
 def save_number(message):
-    db.add_number_to_user(str(message.from_user.id), message.contact.phone_number)
-    bot.send_message(
-        message.chat.id,
-        "Ваш номер успешно сохранен, чтобы получить информацию о боте введите /help",
-        reply_markup=types.ReplyKeyboardRemove(),
-    )
+    try:
+        db.add_number_to_user(str(message.from_user.id), message.contact.phone_number)
+        bot.send_message(
+            message.chat.id,
+            "Ваш номер успешно сохранен, чтобы получить информацию о боте введите /help",
+            reply_markup=types.ReplyKeyboardRemove(),
+        )
+    except Exception:
+        bot.send_message(
+            message.chat.id,
+            "Упс! Что-то пошло не так",
+            reply_markup=types.ReplyKeyboardRemove(),
+        )
 
 
 ####################################################################
@@ -90,36 +97,44 @@ def check_location(message):
 
 
 def find_device(message):
-    locker = lockServer.LockerAPI(server_adress, login, password)
-    rv = locker.device_location()
+    try:
+        locker = lockServer.LockerAPI(server_adress, login, password)
+        rv = locker.device_location()
 
-    # Понять что происходит ниже способны только сильные духом
-    # поэтому просто не трогайте здесь ничего
-    device = rv[0]
-    u_long = message.location.longitude
-    u_lat = message.location.latitude
-    d_long = float(rv[0]["longitude"])
-    d_lat = float(rv[0]["latitude"])
-    m = geodesic((u_long, u_lat), (d_long, d_lat))
-    for i, el in enumerate(rv[1:]):
-        d_long = float(el["longitude"])
-        d_lat = float(el["latitude"])
-        t = geodesic((u_long, u_lat), (d_long, d_lat))
-        if t < m:
-            m = t
-            device = el
+        # Понять что происходит ниже способны только сильные духом
+        # поэтому просто не трогайте здесь ничего
+        device = rv[0]
+        u_long = message.location.longitude
+        u_lat = message.location.latitude
+        d_long = float(rv[0]["longitude"])
+        d_lat = float(rv[0]["latitude"])
+        m = geodesic((u_long, u_lat), (d_long, d_lat))
+        for i, el in enumerate(rv[1:]):
+            d_long = float(el["longitude"])
+            d_lat = float(el["latitude"])
+            t = geodesic((u_long, u_lat), (d_long, d_lat))
+            if t < m:
+                m = t
+                device = el
 
-    bot.send_location(
-        message.chat.id,
-        device["latitude"],
-        device["longitude"],
-        reply_markup=types.ReplyKeyboardRemove(),
-    )
-    rv = locker.occupy_cell(device["id"])
-    bot.reply_to(
-        message, f"Занята ячейка с номером {rv['number']} и паролем {rv['user_key']}"
-    )
-    db.add_cell_to_user(str(message.from_user.id), rv["id"])
+        bot.send_location(
+            message.chat.id,
+            device["latitude"],
+            device["longitude"],
+            reply_markup=types.ReplyKeyboardRemove(),
+        )
+        rv = locker.occupy_cell(device["id"])
+        bot.reply_to(
+            message,
+            f"Занята ячейка с номером {rv['number']} и паролем {rv['user_key']}",
+        )
+        db.add_cell_to_user(str(message.from_user.id), rv["id"])
+    except Exception:
+        bot.send_message(
+            message.chat.id,
+            "Упс! Что-то пошло не так",
+            reply_markup=types.ReplyKeyboardRemove(),
+        )
 
 
 ##################################################################
@@ -149,19 +164,27 @@ def free_cell(message):
 
 
 def free_cell_final(message):
-    locker = lockServer.LockerAPI(server_adress, login, password)
-    rv = locker.free_cell(message.text)
+    try:
+        locker = lockServer.LockerAPI(server_adress, login, password)
+        rv = locker.free_cell(message.text)
 
-    msg = "Ячейка освобождена"
-    if rv.get("error", None) is not None:
-        msg = f"Произошла ошибка {rv['error']}"
+        msg = "Ячейка освобождена"
+        if rv.get("error", None) is not None:
+            msg = f"Произошла ошибка {rv['error']}"
 
-    bot.send_message(
-        message.chat.id,
-        msg,
-        reply_markup=types.ReplyKeyboardRemove(),
-    )
-    db.delete_cell_from_user(user_id=message.from_user.id, cell_id=message.text)
+        bot.send_message(
+            message.chat.id,
+            msg,
+            reply_markup=types.ReplyKeyboardRemove(),
+        )
+        db.delete_cell_from_user(user_id=message.from_user.id, cell_id=message.text)
+    except Exception:
+        bot.send_message(
+            message.chat.id,
+            "Упс! Что-то пошло не так",
+            reply_markup=types.ReplyKeyboardRemove(),
+        )
 
 
+db.init_db(config)
 bot.polling(none_stop=True)

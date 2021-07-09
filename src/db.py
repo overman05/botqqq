@@ -3,23 +3,28 @@ import config
 import os
 
 
-def create_db():
-    os.system(f"cat {config.SQL_SCRIPT} | sqlite3 {config.DB_NAME}")
+def create_db(config):
+    con = sqlite3.connect(config.DB_NAME)
+    cur = con.cursor()
+    with open(config.SQL_SCRIPT, "r") as f:
+        for line in f:
+            cur.execute(line)
+            con.commit()
 
 
-def init_db():
+def init_db(config):
     if os.path.exists(config.DB_NAME):
         try:
             conn = sqlite3.connect(config.DB_NAME)
             cur = conn.cursor()
             cur.execute("SELECT * FROM user")
         except sqlite3.OperationalError:
-            create_db()
+            create_db(config)
             print("Database created")
         else:
             print("Database already exists")
     else:
-        create_db()
+        create_db(config)
         print("Database created")
 
 
@@ -91,7 +96,3 @@ def get_user_cell(user_id):
         uid = cursor.fetchone()[0]
         cursor.execute("SELECT * FROM cells WHERE user_id=?", (uid,))
         return cursor.fetchall()
-
-
-if __name__ == "__main__":
-    init_db()
