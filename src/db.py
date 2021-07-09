@@ -15,6 +15,7 @@ def init_db():
             cur.execute("SELECT * FROM user")
         except sqlite3.OperationalError:
             create_db()
+            print("Database created")
         else:
             print("Database already exists")
     else:

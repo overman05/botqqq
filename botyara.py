@@ -1,8 +1,8 @@
 import telebot
 from telebot import types
-import lockServer
+from src import lockServer
 import config
-import db
+from src import db
 import logging
 from geopy.distance import geodesic
 
@@ -35,7 +35,8 @@ def help(m):
         help_text += "/" + key + ": "
         help_text += commands[key] + "\n"
     bot.send_message(cid, help_text)
-    
+
+
 ###########################################################################
 @bot.message_handler(commands=["start"])
 def start(m):
@@ -91,7 +92,7 @@ def check_location(message):
 def find_device(message):
     locker = lockServer.LockerAPI(server_adress, login, password)
     rv = locker.device_location()
-    
+
     # Понять что происходит ниже способны только сильные духом
     # поэтому просто не трогайте здесь ничего
     device = rv[0]
