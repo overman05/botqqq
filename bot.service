@@ -1,0 +1,14 @@
+[Unit]
+Description=Python locker bot
+
+
+[Service]
+ExecStartPre=/usr/bin/python -m venv /usr/local/sbin/botqqq/venv 
+ExecStartPre=/usr/local/sbin/botqqq/venv/bin/python -m pip install -r /usr/local/sbin/botqqq/requirements.txt
+ExecStart=/usr/local/sbin/botqqq/venv/bin/python /usr/local/sbin/botqqq/botyara.py
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+
